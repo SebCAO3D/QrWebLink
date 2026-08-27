@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generateur QR Code avec Logo</title>
-    <!-- Moteur QR Code -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Utilisation de qrcode-styling pour gerer les angles arrondis -->
+    <script type="text/javascript" src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; max-width: 400px; margin: auto; background: #f4f6f9; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
@@ -14,23 +14,7 @@
         input, select { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
         button { width: 100%; padding: 12px; margin-top: 20px; background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; }
         button:active { background: #218838; }
-        #qrcode-container { margin-top: 25px; display: flex; justify-content: center; align-items: center; position: relative; }
-        #qrcode { position: relative; }
-        /* Style pour superposer le logo au centre du QR Code */
-        #logo-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 8px;
-            padding: 3px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            object-fit: contain;
-            display: none;
-        }
+        #qrcode-container { margin-top: 25px; display: flex; justify-content: center; align-items: center; }
     </style>
 </head>
 <body>
@@ -48,44 +32,60 @@
 
         <div id="qrcode-container">
             <div id="qrcode"></div>
-            <img id="logo-overlay" alt="Logo">
         </div>
     </div>
 
     <script>
+        let qrCode = null;
+
         function generateQRWithLogo() {
             const url = document.getElementById('url').value.trim();
             const logoInput = document.getElementById('logoInput');
             const qrContainer = document.getElementById('qrcode');
-            const logoOverlay = document.getElementById('logo-overlay');
 
             if (!url) {
                 alert('Veuillez entrer un lien internet valide.');
                 return;
             }
 
-            // Nettoyage precedent
-            qrContainer.innerHTML = '';
-            logoOverlay.style.display = 'none';
+            qrContainer.innerHTML = ''; // Nettoyage
 
-            // 1. Generation du QR Code de base (Correction d'erreur 'H' obligatoire pour supporter un logo au centre)
-            new QRCode(qrContainer, {
-                text: url,
-                width: 220,
-                height: 220,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H 
-            });
+            // Fonction de creation du QR Code avec angles arrondis (dotsOptions type: "rounded")
+            const createQR = (logoBase64 = null) => {
+                qrCode = new QRCodeStyling({
+                    width: 220,
+                    height: 220,
+                    data: url,
+                    image: logoBase64,
+                    dotsOptions: {
+                        color: "#000000",
+                        type: "rounded" // <-- C'est ici que les points deviennent arrondis ("dots", "rounded", "classy", "classy-rounded", "square", "extra-rounded")
+                    },
+                    backgroundOptions: {
+                        color: "#ffffff",
+                    },
+                    imageOptions: {
+                        hideBackgroundDots: true,
+                        imageSize: 0.35, // Taille du logo au centre (35%)
+                        margin: 5
+                    },
+                    cornersSquareOptions: {
+                        type: "extra-rounded" // Forme des grands carrés des coins (optionnel)
+                    }
+                });
 
-            // 2. Gestion de l'affichage du logo s'il a ete selectionne
+                qrCode.append(qrContainer);
+            };
+
+            // Gestion du logo (s'il y en a un)
             if (logoInput.files && logoInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    logoOverlay.src = e.target.result;
-                    logoOverlay.style.display = 'block';
+                    createQR(e.target.result);
                 }
                 reader.readAsDataURL(logoInput.files[0]);
+            } else {
+                createQR(null);
             }
         }
     </script>
