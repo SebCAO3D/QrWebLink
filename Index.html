@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generateur QR Code avec Logo</title>
+    <!-- Moteur QR Code -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 15px; max-width: 400px; margin: auto; background: #f4f6f9; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        h2 { text-align: center; color: #1a1a1a; margin-bottom: 20px; }
+        label { display: block; margin-top: 12px; font-weight: 600; font-size: 14px; color: #444; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+        button { width: 100%; padding: 12px; margin-top: 20px; background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        button:active { background: #218838; }
+        #qrcode-container { margin-top: 25px; display: flex; justify-content: center; align-items: center; position: relative; }
+        #qrcode { position: relative; }
+        /* Style pour superposer le logo au centre du QR Code */
+        #logo-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 8px;
+            padding: 3px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            object-fit: contain;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>QR Code avec Logo</h2>
+
+        <label for="url">Lien internet (URL) :</label>
+        <input type="url" id="url" placeholder="https://exemple.com">
+
+        <label for="logoInput">Logo au centre (Image) :</label>
+        <input type="file" id="logoInput" accept="image/*">
+
+        <button onclick="generateQRWithLogo()">Generer le QR Code</button>
+
+        <div id="qrcode-container">
+            <div id="qrcode"></div>
+            <img id="logo-overlay" alt="Logo">
+        </div>
+    </div>
+
+    <script>
+        function generateQRWithLogo() {
+            const url = document.getElementById('url').value.trim();
+            const logoInput = document.getElementById('logoInput');
+            const qrContainer = document.getElementById('qrcode');
+            const logoOverlay = document.getElementById('logo-overlay');
+
+            if (!url) {
+                alert('Veuillez entrer un lien internet valide.');
+                return;
+            }
+
+            // Nettoyage precedent
+            qrContainer.innerHTML = '';
+            logoOverlay.style.display = 'none';
+
+            // 1. Generation du QR Code de base (Correction d'erreur 'H' obligatoire pour supporter un logo au centre)
+            new QRCode(qrContainer, {
+                text: url,
+                width: 220,
+                height: 220,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H 
+            });
+
+            // 2. Gestion de l'affichage du logo s'il a ete selectionne
+            if (logoInput.files && logoInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    logoOverlay.src = e.target.result;
+                    logoOverlay.style.display = 'block';
+                }
+                reader.readAsDataURL(logoInput.files[0]);
+            }
+        }
+    </script>
+</body>
+</html>
